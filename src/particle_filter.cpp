@@ -29,7 +29,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 			,std_y = std[1]
 		    ,std_theta = std[2]; // Standard deviations for x, y, and theta
 
-	default_random_engine gen;
+	
 	normal_distribution<double> dist_x(x, std_x);
 	normal_distribution<double> dist_y(y, std_y);
 	normal_distribution<double> dist_theta(theta, std_theta);
@@ -55,7 +55,6 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 	//  http://en.cppreference.com/w/cpp/numeric/random/normal_distribution
 	//  http://www.cplusplus.com/reference/random/default_random_engine/
 
-	default_random_engine gen;
 	normal_distribution<double> dist_x(0, std_pos[0]);
 	normal_distribution<double> dist_y(0, std_pos[1]);
 	normal_distribution<double> dist_theta(0, std_pos[2]);
@@ -205,30 +204,19 @@ void ParticleFilter::resample() {
 	// NOTE: You may find std::discrete_distribution helpful here.
 	//   http://en.cppreference.com/w/cpp/numeric/random/discrete_distribution
 
-	default_random_engine gen;
 	vector<double> weights;
-	double maxWeight = numeric_limits<double>::min();
 	for (int i = 0; i < num_particles; i++) {
 		weights.push_back(particles[i].weight);
-		if (particles[i].weight > maxWeight) {
-			maxWeight = particles[i].weight;
-		}
 	}
 
-	uniform_real_distribution<double> distDouble(0.0, maxWeight);
-	uniform_int_distribution<int> distInt(0, num_particles - 1);
 	
-	int index = distInt(gen);
-	double beta = 0.0;
+	int index = -1;
+	std::discrete_distribution<> d(weights.begin(), weights.end());
+	index = d(gen);
 
-	// the wheel
 	vector<Particle> resampledParticles;
 	for (int i = 0; i < num_particles; i++) {
-		beta += distDouble(gen) * 2.0;
-		while (beta > weights[index]) {
-			beta -= weights[index];
-			index = (index + 1) % num_particles;
-		}
+		index = d(gen);
 		resampledParticles.push_back(particles[index]);
 	}
 
